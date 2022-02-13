@@ -4,10 +4,10 @@ After=network.target
 
 [Service]
 User=ubuntu
-Group=www-data
+Group=ubuntu
 WorkingDirectory=/home/ubuntu/invisible
 Environment="PATH=/home/ubuntu/invisible/venv/bin"
-ExecStart=/home/ubuntu/invisible/venv/bin/uwsgi --ini myproject.ini
+ExecStart=/home/ubuntu/invisible/venv/bin/uwsgi --ini invisible.ini
 
 [Install]
 WantedBy=multi-user.target

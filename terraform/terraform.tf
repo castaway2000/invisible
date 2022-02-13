@@ -1,19 +1,22 @@
 variable "awsprops" {
-    type = "map"
+    type = map
     default = {
     region = "us-west-2"
-    vpc = "USE YOUR VPC"
+    profile = "invisible"
+    vpc = "vpc-07527a62"
     ami = "ami-0892d3c7ee96c0bf7"  //Ubuntu 20
     itype = "t2.medium"
-    subnet = "USE YOUR SUBNET NAME"
+    subnet = "subnet-19f6cb7c"
     publicip = true
-    keyname = "ADD-SSH-KEY"
+    keyname = "invisible"
     secgroupname = "WebSeverSecurityGroup"
   }
 }
 
 provider "aws" {
   region = lookup(var.awsprops, "region")
+  shared_credentials_files = ["/Users/xwing/.aws/credentials"]
+  profile = lookup(var.awsprops, "profile")
 }
 
 resource "aws_security_group" "adam-flask-sg" {
@@ -24,7 +27,7 @@ resource "aws_security_group" "adam-flask-sg" {
   // To Allow Port 22 Transport
   ingress {
     from_port = 22
-    protocol = ""
+    protocol = "TCP"
     to_port = 22
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -32,7 +35,7 @@ resource "aws_security_group" "adam-flask-sg" {
   // To Allow Port 80 Transport
   ingress {
     from_port = 80
-    protocol = ""
+    protocol = "TCP"
     to_port = 80
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -62,7 +65,6 @@ resource "aws_instance" "project-flask" {
   ]
   root_block_device {
     delete_on_termination = true
-    iops = 150
     volume_size = 50
     volume_type = "gp2"
   }
@@ -78,7 +80,7 @@ resource "aws_instance" "project-flask" {
 
 # generate inventory file for Ansible
 resource "local_file" "inventory_cfg" {
-  content = templatefile("${path.module}/inventory.tpl",
+  content = templatefile("./inventory.tpl",
     {
       webservers = aws_instance.project-flask.*.public_ip
     }
