@@ -3,6 +3,9 @@
 * in your terraform file under terraform/terraform.tf change the awsprops to match your known environment. things such as VPC-ID, SUBNET-ID and more
 * make sure your awscredentials file is using the absolute path.
 
+make sure to initialize your terraform workspace in the /terraform directory by running: 
+`terraform init`
+
 run plan to see what it will execute before you go full ham:
 `terraform plan`
 then when ready
