@@ -2,32 +2,63 @@
 - hosts: all
   tasks:
 # get and install dependencies
+    - name: Run the equivalent of "apt-get update" as a separate step
+      apt:
+        update_cache: yes
+      become: yes
+
+    - name: Run the equivalent of "apt-get upgrade" as a separate step
+      apt:
+        upgrade: safe
+      become: yes
+
     - name: pull repo for latest
       ansible.builtin.git:
         repo: https://github.com/castaway2000/invisible.git
         dest: /home/ubuntu/invisible
         single_branch: yes
-        version: master
+        version: main
+
+    - name: install list of packages
+      apt:
+        pkg:
+        - nginx
+        - gcc
+        - python3-dev
+        - build-essential
+        - libssl-dev
+        - libffi-dev
+        - python3-setuptools
+        - uwsgi-plugin-python3
+        - python3.8-venv
+      become: yes
+
     - name: Install specified python requirements in indicated (venv)
       pip:
-        executable: pip3.8
         requirements: /home/ubuntu/invisible/requirements.txt
         virtualenv: /home/ubuntu/invisible/venv
         virtualenv_command: /usr/bin/python3.8 -m venv
-    - name: ensure nginx is at the latest version
-      apt: name=nginx state=latest
-      become: yes
+
     - name: start nginx
       service:
           name: nginx
           state: started
       become: yes
 
+# allowing the firewall
+# this is locked down at the security group level and can be adapted in a future iteration
+    - name: allow ufw for nginx and any other apps.
+      community.general.ufw:
+        state: enabled
+        policy: allow
+      become: yes
+
 # move configs around
     - name: copy the nginx config file and restart nginx
-      copy:
-        src: /home/ubuntu/ansible/static_site.cfg
+      ansible.builtin.copy:
+        src: /home/ubuntu/invisible/ansible/static_site.cfg
         dest: /etc/nginx/sites-available/static_site.cfg
+        remote_src: yes
       become: yes
     - name: create symlink
       file:
@@ -39,23 +70,26 @@
 # start serving content
     - name: copy systemD service file
       ansible.builtin.copy:
-        src: /home/ubuntu/invisble/ansible/invisible.service
+        src: /home/ubuntu/invisible/ansible/invisible.service
         dest: /etc/systemd/system/invisible.service
+        remote_src: yes
         owner: root
         group: root
         mode: '0644'
         backup: yes
-        become: yes
+      become: yes
     - name: reload systemD to track new file and auto-start on reboot
       systemd:
         daemon_reload: yes
         name: invisible.service
         state: started
         enabled: True
+      become: yes
     - name: reload systemD to auto-start nginx on boot
       systemd:
         name: nginx.service
         enabled: True
+      become: yes
     - name: restart nginx
       service:
         name: nginx
