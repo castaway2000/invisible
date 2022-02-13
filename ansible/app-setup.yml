@@ -1,0 +1,63 @@
+---
+- hosts: all
+  tasks:
+# get and install dependencies
+    - name: pull repo for latest
+      ansible.builtin.git:
+        repo: https://github.com/castaway2000/invisible.git
+        dest: /home/ubuntu/invisible
+        single_branch: yes
+        version: master
+    - name: Install specified python requirements in indicated (venv)
+      pip:
+        executable: pip3.8
+        requirements: /home/ubuntu/invisible/requirements.txt
+        virtualenv: /home/ubuntu/invisible/venv
+        virtualenv_command: /usr/bin/python3.8 -m venv
+    - name: ensure nginx is at the latest version
+      apt: name=nginx state=latest
+      become: yes
+    - name: start nginx
+      service:
+          name: nginx
+          state: started
+      become: yes
+
+# move configs around
+    - name: copy the nginx config file and restart nginx
+      copy:
+        src: /home/ubuntu/ansible/static_site.cfg
+        dest: /etc/nginx/sites-available/static_site.cfg
+      become: yes
+    - name: create symlink
+      file:
+        src: /etc/nginx/sites-available/static_site.cfg
+        dest: /etc/nginx/sites-enabled/default
+        state: link
+      become: yes
+
+# start serving content
+    - name: copy systemD service file
+      ansible.builtin.copy:
+        src: /home/ubuntu/invisble/ansible/invisible.service
+        dest: /etc/systemd/system/invisible.service
+        owner: root
+        group: root
+        mode: '0644'
+        backup: yes
+        become: yes
+    - name: reload systemD to track new file and auto-start on reboot
+      systemd:
+        daemon_reload: yes
+        name: invisible.service
+        state: started
+        enabled: True
+    - name: reload systemD to auto-start nginx on boot
+      systemd:
+        name: nginx.service
+        enabled: True
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+      become: yes
