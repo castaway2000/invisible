@@ -1,7 +1,7 @@
 # Instructions
 ### Terraform
-* in your terraform file under terraform/terraform.tf change the awsprops to match your known environment. things such as VPC-ID, SUBNET-ID and more
-* make sure your awscredentials file is using the absolute path.
+* in your terraform file under terraform/terraform.tf change the awsprops to match your known environment. things such as VPC-ID, SUBNET-ID and SSH-KEYNAME
+* make sure your awscredentials file is using the absolute path. you will need to create an ssh key in aws and download it or you wont be able to remote into the host at all. Anisble needs this key. 
 
 make sure to initialize your terraform workspace in the /terraform directory by running: 
 `terraform init`
