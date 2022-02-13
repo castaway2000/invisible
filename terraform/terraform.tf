@@ -85,7 +85,7 @@ resource "local_file" "inventory_cfg" {
       webservers = aws_instance.project-flask.*.public_ip
     }
   )
-  filename = "../ansible/inventory.cfg"
+  filename = "../ansible/inventory.ini"
 }
 
 

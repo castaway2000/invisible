@@ -1,0 +1,7 @@
+*/inventory.ini
+__pycache__/
+*/__pycache__/
+terraform/*.tfstate*
+terraform/.terraform/
+.idea/
+venv/
